@@ -43,25 +43,28 @@ export default function Home() {
     
     return (
         <div className="flex">
-            <div className="flex flex-col p-5">
-                {presets.map(preset =>
-                    <div key={preset.id} className="flex gap-2">
-                        <input id={`preset-${preset.id}`} type="checkbox" checked={enabledPresetIds.includes(preset.id)} onChange={e => {
-                            setEnabledPresetIds(produce(enabledPresetIds, draft => {
-                                if (e.target.checked) {
-                                    if (!draft.includes(preset.id)) {
-                                        draft.push(preset.id);
+            <div className="flex flex-col gap-2 m-5">
+                <span>Presets</span>
+                <div className="flex flex-col">
+                    {presets.map(preset =>
+                        <div key={preset.id} className="flex gap-2">
+                            <input id={`preset-${preset.id}`} type="checkbox" checked={enabledPresetIds.includes(preset.id)} onChange={e => {
+                                setEnabledPresetIds(produce(enabledPresetIds, draft => {
+                                    if (e.target.checked) {
+                                        if (!draft.includes(preset.id)) {
+                                            draft.push(preset.id);
+                                        }
+                                    } else {
+                                        if (draft.includes(preset.id)) {
+                                            draft.splice(draft.indexOf(preset.id), 1);
+                                        }
                                     }
-                                } else {
-                                    if (draft.includes(preset.id)) {
-                                        draft.splice(draft.indexOf(preset.id), 1);
-                                    }
-                                }
-                            }));
-                        }}/>
-                        <label className="label" htmlFor={`preset-${preset.id}`}>{preset.name}</label>
-                    </div>
-                )}
+                                }));
+                            }}/>
+                            <label className="label" htmlFor={`preset-${preset.id}`}>{preset.name}</label>
+                        </div>
+                    )}
+                </div>
             </div>
             <div className=" bg-slate-400">
                 <ForceGraph2D

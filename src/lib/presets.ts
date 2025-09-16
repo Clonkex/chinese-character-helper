@@ -108,7 +108,7 @@ export const presets: Preset[] = [
             {c: ['记', '者'], p: ['ji4', 'zhe3']},
             {c: ['请', '问'], p: ['qing3', 'wen4']},
             {c: ['问'], p: ['wen4']},
-            {c: ['贵', '姓'], p: ['gao1', 'xing4']},
+            {c: ['贵', '姓'], p: ['gui4', 'xing4']},
             {c: ['姓'], p: ['xing4']},
             {c: ['叫'], p: ['jiao4']},
             {c: ['先', '生'], p: ['xian1', 'sheng5']},

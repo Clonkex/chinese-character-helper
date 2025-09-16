@@ -1,5 +1,3 @@
-// export type PresetWord = string[][];
-
 export interface Preset {
     id: string;
     name: string;

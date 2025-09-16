@@ -1,103 +1,219 @@
-import Image from "next/image";
+'use client'
+
+import { produce, setAutoFreeze } from 'immer';
+import { useEffect, useRef, useState } from 'react';
+import ForceGraph2D, { ForceGraphMethods, LinkObject, NodeObject } from 'react-force-graph-2d';
+import { Preset, presets } from '@/lib/presets';
+
+setAutoFreeze(false);
+
+enum NodeType {
+  Character,
+  Pinyin,
+  Custom,
+}
+
+interface GraphNode {
+  type: NodeType;
+}
+
+interface GraphLink {
+  weakLink: boolean;
+}
 
 export default function Home() {
+  const [enabledPresetIds, setEnabledPresetIds] = useState([] as string[]);
+  const [graphData, setGraphData] = useState({
+    nodes: [] as NodeObject<GraphNode>[],
+    links: [] as LinkObject<GraphNode, GraphLink>[],
+  });
+  
+  useEffect(() => {
+    setGraphData(generateGraphDataFromPresets(presets.filter(p => enabledPresetIds.includes(p.id))));
+    graphRef.current?.zoomToFit(500);
+  }, [enabledPresetIds]);
+  
+  useEffect(() => {
+    setTimeout(() => {
+      graphRef.current?.zoomToFit(500);
+    }, 500);
+  }, []);
+  
+  const graphRef = useRef<ForceGraphMethods<GraphNode, GraphLink>>(undefined);
+  
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="flex">
+      <div className="flex flex-col p-5">
+        {presets.map(preset =>
+          <div key={preset.id} className="flex gap-2">
+            <input id={`preset-${preset.id}`} type="checkbox" checked={enabledPresetIds.includes(preset.id)} onChange={e => {
+              setEnabledPresetIds(produce(enabledPresetIds, draft => {
+                if (e.target.checked) {
+                  if (!draft.includes(preset.id)) {
+                    draft.push(preset.id);
+                  }
+                } else {
+                  if (draft.includes(preset.id)) {
+                    draft.splice(draft.indexOf(preset.id), 1);
+                  }
+                }
+              }));
+            }}/>
+            <label htmlFor={`preset-${preset.id}`}>{preset.name}</label>
+          </div>
+        )}
+      </div>
+      <div className=" bg-slate-400">
+        <ForceGraph2D
+          ref={graphRef}
+          graphData={graphData}
+          cooldownTicks={100}
+          nodeCanvasObject={(node, ctx, globalScale) => {
+            if (node.x === undefined || node.y === undefined) {
+              return;
+            }
+            
+            // Calculate colour and font size
+            let colour: string;
+            let fontSize: number;
+            switch (node.type) {
+              case NodeType.Character:
+                colour = '#d2f9fa';
+                fontSize = 14 / globalScale;
+                break;
+              case NodeType.Pinyin:
+                colour = '#f2d2fa';
+                fontSize = 11 / globalScale;
+                break;
+              case NodeType.Custom:
+                colour = '#fae9d2';
+                fontSize = 11 / globalScale;
+                break;
+            }
+            
+            // Prepare font and measure text
+            ctx.font = `${fontSize}px Sans-Serif`;
+            const label = String(node.id);
+            const diameter = ctx.measureText(label).width + 2;
+            
+            // Render circle
+            ctx.fillStyle = colour;
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, diameter / 2, 0, 2 * Math.PI);
+            ctx.fill();
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+            // Render text
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#0e0e0e';
+            ctx.fillText(label, node.x, node.y);
+
+            node.diameter = diameter; // to re-use in nodePointerAreaPaint
+          }}
+          nodePointerAreaPaint={(node, color, ctx) => {
+            if (node.x === undefined || node.y === undefined) {
+              return;
+            }
+            ctx.fillStyle = color;
+            const diameter = node.diameter;
+            if (diameter) {
+              ctx.beginPath();
+              ctx.arc(node.x, node.y, diameter / 2, 0, 2 * Math.PI);
+              ctx.fill();
+            }
+          }}
+          linkWidth={(d: GraphLink) => d.weakLink ? 4 : 8}
+          linkColor={(d: GraphLink) => d.weakLink ? '#c79bc9' : '#65cdbc'}
+        />
+      </div>
     </div>
   );
+}
+
+function generateGraphDataFromPresets(presets: Preset[]) {
+  const graphData = {
+    nodes: [] as NodeObject<GraphNode>[],
+    links: [] as LinkObject<GraphNode, GraphLink>[],
+  };
+  
+  for (const preset of presets) {
+    for (const word of preset.words) {
+      
+      // Skip any broken preset words
+      if (word.c.length !== word.p.length) {
+        console.log(`Skipping invalid word ${word.c.join('')} (${word.p.join('')}) in preset ${preset.id}`);
+        continue;
+      }
+      
+      // Add the full word with all characters
+      graphData.nodes.push({
+        id: word.c.join(''),
+        type: NodeType.Character,
+      });
+      
+      // Add each character separately unless it's already added
+      const newChars = word.c.map(c => ({
+        id: c,
+        type: NodeType.Character,
+      }));
+      for (const newChar of newChars) {
+        if (graphData.nodes.find(n => n.id === newChar.id)) {
+          continue;
+        }
+        graphData.nodes.push(newChar);
+      }
+      
+      // Add each pinyin separately unless it's already added
+      const newPinyins = word.p.map(p => ({
+        id: p,
+        type: NodeType.Pinyin,
+      }));
+      for (const newPinyin of newPinyins) {
+        if (graphData.nodes.find(n => n.id === newPinyin.id)) {
+          continue;
+        }
+        graphData.nodes.push(newPinyin);
+      }
+      
+      // Add links
+      for (let i = 0; i < word.c.length; i++) {
+        const c = word.c[i];
+        const p = word.p[i];
+        
+        // Add the link from the full word to the current character if necessary
+        if (word.c.length > 1) {
+          graphData.links.push({
+            source: word.c.join(''),
+            target: c,
+            weakLink: false,
+          });
+        }
+        
+        // Add the link from the current character to the current pinyin
+        graphData.links.push({
+          source: c,
+          target: p,
+          weakLink: false,
+        });
+        
+        // Add weak links between pinyins that differ only by tone (e.g. shi4 > shi2)
+        const simpleP = p.replace(/\d/, '');
+        for (const other of graphData.nodes) {
+          if (other.id === p || other.type !== NodeType.Pinyin) {
+            continue;
+          }
+          const otherSimpleP = String(other.id).replace(/\d/, '');
+          if (simpleP === otherSimpleP) {
+            graphData.links.push({
+              source: p,
+              target: other,
+              weakLink: true,
+            });
+          }
+        }
+      }
+    }
+  }
+  
+  return graphData;
 }

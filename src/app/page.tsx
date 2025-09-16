@@ -22,7 +22,7 @@ interface GraphLink {
 }
 
 export default function Home() {
-  const [enabledPresetIds, setEnabledPresetIds] = useState([] as string[]);
+  const [enabledPresetIds, setEnabledPresetIds] = useState(presets.map(p => p.id));
   const [graphData, setGraphData] = useState({
     nodes: [] as NodeObject<GraphNode>[],
     links: [] as LinkObject<GraphNode, GraphLink>[],

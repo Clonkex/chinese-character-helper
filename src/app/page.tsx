@@ -27,11 +27,13 @@ export default function Home() {
         nodes: [] as NodeObject<GraphNode>[],
         links: [] as LinkObject<GraphNode, GraphLink>[],
     });
+    const [enablePresetNodes, setEnablePresetNodes] = useState(true);
+    const [useGlobalScale, setUseGlobalScale] = useState(false);
     
     useEffect(() => {
-        setGraphData(generateGraphDataFromPresets(presets.filter(p => enabledPresetIds.includes(p.id))));
+        setGraphData(generateGraphDataFromPresets(presets.filter(p => enabledPresetIds.includes(p.id)), enablePresetNodes));
         graphRef.current?.zoomToFit(500);
-    }, [enabledPresetIds]);
+    }, [enabledPresetIds, enablePresetNodes]);
     
     useEffect(() => {
         setTimeout(() => {
@@ -43,27 +45,44 @@ export default function Home() {
     
     return (
         <div className="flex">
-            <div className="flex flex-col gap-2 m-5">
-                <span>Presets</span>
-                <div className="flex flex-col">
-                    {presets.map(preset =>
-                        <div key={preset.id} className="flex gap-2">
-                            <input id={`preset-${preset.id}`} type="checkbox" checked={enabledPresetIds.includes(preset.id)} onChange={e => {
-                                setEnabledPresetIds(produce(enabledPresetIds, draft => {
-                                    if (e.target.checked) {
-                                        if (!draft.includes(preset.id)) {
-                                            draft.push(preset.id);
+            <div className="flex flex-col gap-10 m-5">
+                <div className="flex flex-col gap-2">
+                    <span>Presets</span>
+                    <div className="flex flex-col">
+                        {presets.map(preset =>
+                            <div key={preset.id} className="flex gap-2">
+                                <input id={`preset-${preset.id}`} type="checkbox" checked={enabledPresetIds.includes(preset.id)} onChange={e => {
+                                    setEnabledPresetIds(produce(enabledPresetIds, draft => {
+                                        if (e.target.checked) {
+                                            if (!draft.includes(preset.id)) {
+                                                draft.push(preset.id);
+                                            }
+                                        } else {
+                                            if (draft.includes(preset.id)) {
+                                                draft.splice(draft.indexOf(preset.id), 1);
+                                            }
                                         }
-                                    } else {
-                                        if (draft.includes(preset.id)) {
-                                            draft.splice(draft.indexOf(preset.id), 1);
-                                        }
-                                    }
-                                }));
-                            }}/>
-                            <label className="label" htmlFor={`preset-${preset.id}`}>{preset.name}</label>
-                        </div>
-                    )}
+                                    }));
+                                }}/>
+                                <label className="label" htmlFor={`preset-${preset.id}`}>{preset.name}</label>
+                            </div>
+                        )}
+                    </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                    <span>Settings</span>
+                    <div className="flex gap-2">
+                        <input id="enablePresetNodesCheckbox" type="checkbox" checked={enablePresetNodes} onChange={e => {
+                            setEnablePresetNodes(e.target.checked);
+                        }}/>
+                        <label className="label" htmlFor="enablePresetNodesCheckbox">Add Preset Nodes</label>
+                    </div>
+                    <div className="flex gap-2">
+                        <input id="useGlobalScaleCheckbox" type="checkbox" checked={useGlobalScale} onChange={e => {
+                            setUseGlobalScale(e.target.checked);
+                        }}/>
+                        <label className="label" htmlFor="useGlobalScaleCheckbox">Scale With Zoom</label>
+                    </div>
                 </div>
             </div>
             <div className=" bg-slate-400">
@@ -81,15 +100,15 @@ export default function Home() {
                         switch (node.type) {
                             case NodeType.Character:
                                 colour = '#d2f9fa';
-                                fontSize = 25 / globalScale;
+                                fontSize = useGlobalScale ? 25 / globalScale : 15;
                                 break;
                             case NodeType.Pinyin:
                                 colour = '#f2d2fa';
-                                fontSize = 15 / globalScale;
+                                fontSize = useGlobalScale ? 15 / globalScale : 10;
                                 break;
                             case NodeType.Custom:
                                 colour = '#fae9d2';
-                                fontSize = 15 / globalScale;
+                                fontSize = useGlobalScale ? 15 / globalScale : 10;
                                 break;
                         }
                         
@@ -132,7 +151,7 @@ export default function Home() {
     );
 }
 
-function generateGraphDataFromPresets(presets: Preset[]) {
+function generateGraphDataFromPresets(presets: Preset[], addPresetNodes: boolean) {
     const graphData = {
         nodes: [
             // {
@@ -146,7 +165,9 @@ function generateGraphDataFromPresets(presets: Preset[]) {
     for (const preset of presets) {
         
         // Add the preset as a node
-        addNode(graphData, preset.shortName, NodeType.Custom);
+        if (addPresetNodes) {
+            addNode(graphData, preset.shortName, NodeType.Custom);
+        }
                 
         // Add NPCR link
         // addLink(graphData, preset.id, 'root', false);
@@ -176,7 +197,7 @@ function generateGraphDataFromPresets(presets: Preset[]) {
                 const p = word.p[i];
                 
                 // If the full word hadn't previously been added, add the link to the preset
-                if (fullWordAdded) {
+                if (addPresetNodes && fullWordAdded) {
                     addLink(graphData, fullC, preset.shortName, false);
                 }
                 

@@ -45,6 +45,7 @@ export default function Picker() {
                     const newPreset: Preset = {
                         id: newPresetTitle.toLowerCase().replaceAll(' ', ''),
                         name: newPresetTitle,
+                        shortName: newPresetTitle,
                         words: [],
                     };
                     setNewPresetTitle('');

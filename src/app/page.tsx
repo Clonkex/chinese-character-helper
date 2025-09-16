@@ -107,7 +107,7 @@ export default function Home() {
             ctx.fillStyle = '#0e0e0e';
             ctx.fillText(label, node.x, node.y);
 
-            node.diameter = diameter; // to re-use in nodePointerAreaPaint
+            node.diameter = diameter; // to reuse in nodePointerAreaPaint
           }}
           nodePointerAreaPaint={(node, color, ctx) => {
             if (node.x === undefined || node.y === undefined) {
@@ -142,84 +142,46 @@ function generateGraphDataFromPresets(presets: Preset[]) {
   
   for (const preset of presets) {
     
-    // 
-    graphData.nodes.push({
-      id: preset.id,
-      type: NodeType.Custom,
-    });
+    // Add the preset as a node
+    addNode(graphData, preset.shortName, NodeType.Custom);
         
     // Add NPCR link
-    // graphData.links.push({
-    //   source: preset.id,
-    //   target: 'root',
-    //   weakLink: false,
-    // });
+    // addLink(graphData, preset.id, 'root', false);
     
     for (const word of preset.words) {
+      const fullC = word.c.join('');
+      const fullP = word.p.join('');
       
       // Skip any broken preset words
       if (word.c.length !== word.p.length) {
-        console.log(`Skipping invalid word ${word.c.join('')} (${word.p.join('')}) in preset ${preset.id}`);
+        console.log(`Skipping invalid word "${fullC}" (${fullP}) in preset "${preset.id}"`);
         continue;
       }
       
       // Add the full word with all characters
-      graphData.nodes.push({
-        id: word.c.join(''),
-        type: NodeType.Character,
-      });
+      const fullWordAdded = addNode(graphData, fullC, NodeType.Character);
       
       // Add each character separately unless it's already added
-      const newChars = word.c.map(c => ({
-        id: c,
-        type: NodeType.Character,
-      }));
-      for (const newChar of newChars) {
-        if (graphData.nodes.find(n => n.id === newChar.id)) {
-          continue;
-        }
-        graphData.nodes.push(newChar);
-      }
+      word.c.forEach(c => addNode(graphData, c, NodeType.Character));
       
       // Add each pinyin separately unless it's already added
-      const newPinyins = word.p.map(p => ({
-        id: p,
-        type: NodeType.Pinyin,
-      }));
-      for (const newPinyin of newPinyins) {
-        if (graphData.nodes.find(n => n.id === newPinyin.id)) {
-          continue;
-        }
-        graphData.nodes.push(newPinyin);
-      }
+      word.p.forEach(p => addNode(graphData, p, NodeType.Pinyin));
       
       // Add links
       for (let i = 0; i < word.c.length; i++) {
         const c = word.c[i];
         const p = word.p[i];
         
-        // 
-        graphData.links.push({
-          source: word.c.join(''),
-          target: preset.id,
-          weakLink: false,
-        });
-        
-        // Add the link from the full word to the current character if necessary
-        if (word.c.length > 1) {
-          graphData.links.push({
-            source: word.c.join(''),
-            target: c,
-            weakLink: false,
-          });
+        // If the full word hadn't previously been added, add the link to the preset
+        if (fullWordAdded) {
+          addLink(graphData, fullC, preset.shortName, false);
         }
         
+        // Add the link from the full word to the current character
+        addLink(graphData, fullC, c, false);
+        
         // Add the link from the current character to the current pinyin
-        graphData.links.push({
-          source: c,
-          target: p,
-          weakLink: false,
-        });
+        addLink(graphData, c, p, false);
         
         // Add weak links between pinyins that differ only by tone (e.g. shi4 > shi2)
         const simpleP = p.replace(/\d/, '');
@@ -229,11 +191,7 @@ function generateGraphDataFromPresets(presets: Preset[]) {
           }
           const otherSimpleP = String(other.id).replace(/\d/, '');
           if (simpleP === otherSimpleP) {
-            graphData.links.push({
-              source: p,
-              target: other,
-              weakLink: true,
-            });
+            addLink(graphData, p, other.id!, true);
           }
         }
       }
@@ -241,4 +199,43 @@ function generateGraphDataFromPresets(presets: Preset[]) {
   }
   
   return graphData;
+
+  function addNode(graphData: { nodes: NodeObject<GraphNode>[], links: LinkObject<GraphNode, GraphLink>[] }, id: string, type: NodeType): boolean {
+    if (graphData.nodes.find(n => n.id === id) !== undefined) {
+      console.log(`Skipping node because node with id "${id}" already exists`);
+      return false;
+    }
+    console.log(`Adding node "${id}"`);
+    graphData.nodes.push({
+      id,
+      type,
+    });
+    return true;
+  }
+
+  function addLink(graphData: { nodes: NodeObject<GraphNode>[], links: LinkObject<GraphNode, GraphLink>[] }, source: string | number, target: string | number, weakLink: boolean): boolean {
+    if (source === target) {
+      console.log(`Skipping link because source "${source}" === target "${target}"`);
+      return false;
+    }
+    const test1 = graphData.links.find(l => l.source === source && l.target === target);
+    if (test1 !== undefined) {
+      console.log(`Skipping link because an existing link with the same source "${source}" and target "${target}" exists`);
+      console.log(test1);
+      return false;
+    }
+    const test2 = graphData.links.find(l => l.source === target && l.target === source);
+    if (test2 !== undefined) {
+      console.log(`Skipping link because an existing link with a source matching target "${target}" and target matching source "${source}" exists`);
+      console.log(test2);
+      return false;
+    }
+    console.log(`Adding link with source "${source}" and target "${target}"`);
+    graphData.links.push({
+      source,
+      target,
+      weakLink,
+    });
+    return true;
+  }
 }

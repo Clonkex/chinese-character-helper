@@ -59,7 +59,7 @@ export default function Home() {
                 }
               }));
             }}/>
-            <label htmlFor={`preset-${preset.id}`}>{preset.name}</label>
+            <label className="label" htmlFor={`preset-${preset.id}`}>{preset.name}</label>
           </div>
         )}
       </div>
@@ -67,7 +67,6 @@ export default function Home() {
         <ForceGraph2D
           ref={graphRef}
           graphData={graphData}
-          cooldownTicks={100}
           nodeCanvasObject={(node, ctx, globalScale) => {
             if (node.x === undefined || node.y === undefined) {
               return;
@@ -79,15 +78,15 @@ export default function Home() {
             switch (node.type) {
               case NodeType.Character:
                 colour = '#d2f9fa';
-                fontSize = 14 / globalScale;
+                fontSize = 25 / globalScale;
                 break;
               case NodeType.Pinyin:
                 colour = '#f2d2fa';
-                fontSize = 11 / globalScale;
+                fontSize = 15 / globalScale;
                 break;
               case NodeType.Custom:
                 colour = '#fae9d2';
-                fontSize = 11 / globalScale;
+                fontSize = 15 / globalScale;
                 break;
             }
             
@@ -132,11 +131,30 @@ export default function Home() {
 
 function generateGraphDataFromPresets(presets: Preset[]) {
   const graphData = {
-    nodes: [] as NodeObject<GraphNode>[],
+    nodes: [
+      // {
+      //   id: 'root',
+      //   type: NodeType.Custom,
+      // },
+    ] as NodeObject<GraphNode>[],
     links: [] as LinkObject<GraphNode, GraphLink>[],
   };
   
   for (const preset of presets) {
+    
+    // 
+    graphData.nodes.push({
+      id: preset.id,
+      type: NodeType.Custom,
+    });
+        
+    // Add NPCR link
+    // graphData.links.push({
+    //   source: preset.id,
+    //   target: 'root',
+    //   weakLink: false,
+    // });
+    
     for (const word of preset.words) {
       
       // Skip any broken preset words
@@ -179,6 +197,13 @@ function generateGraphDataFromPresets(presets: Preset[]) {
       for (let i = 0; i < word.c.length; i++) {
         const c = word.c[i];
         const p = word.p[i];
+        
+        // 
+        graphData.links.push({
+          source: word.c.join(''),
+          target: preset.id,
+          weakLink: false,
+        });
         
         // Add the link from the full word to the current character if necessary
         if (word.c.length > 1) {

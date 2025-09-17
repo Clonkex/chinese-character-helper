@@ -18,10 +18,10 @@ interface GraphNode {
 }
 
 enum LinkType {
-    Level4, // strongest
+    Level4, // Strongest
     Level3,
     Level2,
-    Level1, // weakest
+    Level1, // Weakest
 }
 
 interface GraphLink {
@@ -35,7 +35,7 @@ export default function Home() {
         links: [] as LinkObject<GraphNode, GraphLink>[],
     });
     const [enablePresetNodes, setEnablePresetNodes] = useState(true);
-    const [useGlobalScale, setUseGlobalScale] = useState(false);
+    const [useGlobalScale, setUseGlobalScale] = useState(true);
     const [showLevel4Links, setShowLevel4Links] = useState(true);
     const [showLevel3Links, setShowLevel3Links] = useState(true);
     const [showLevel2Links, setShowLevel2Links] = useState(true);

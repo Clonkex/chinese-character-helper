@@ -37,6 +37,7 @@ export default function Home() {
     });
     const [enablePresetNodes, setEnablePresetNodes] = useState(true);
     const [useGlobalScale, setUseGlobalScale] = useState(true);
+    const [showLevel5Links, setShowLevel5Links] = useState(true);
     const [showLevel4Links, setShowLevel4Links] = useState(true);
     const [showLevel3Links, setShowLevel3Links] = useState(true);
     const [showLevel2Links, setShowLevel2Links] = useState(true);
@@ -45,9 +46,9 @@ export default function Home() {
     const [matchWholeWord, setMatchWholeWord] = useState(true);
     
     useEffect(() => {
-        setGraphData(generateGraphDataFromPresets(presets.filter(p => enabledPresetIds.includes(p.id)), enablePresetNodes, showLevel4Links, showLevel3Links, showLevel2Links, showLevel1Links, filterText, matchWholeWord));
+        setGraphData(generateGraphDataFromPresets(presets.filter(p => enabledPresetIds.includes(p.id)), enablePresetNodes, showLevel5Links, showLevel4Links, showLevel3Links, showLevel2Links, showLevel1Links, filterText, matchWholeWord));
         graphRef.current?.zoomToFit(500);
-    }, [enabledPresetIds, enablePresetNodes, showLevel4Links, showLevel3Links, showLevel2Links, showLevel1Links, filterText, matchWholeWord]);
+    }, [enabledPresetIds, enablePresetNodes, showLevel5Links, showLevel4Links, showLevel3Links, showLevel2Links, showLevel1Links, filterText, matchWholeWord]);
     
     useEffect(() => {
         setTimeout(() => {
@@ -97,6 +98,12 @@ export default function Home() {
                                 setUseGlobalScale(e.target.checked);
                             }}/>
                             <label className="label" htmlFor="useGlobalScaleCheckbox">Scale With Zoom</label>
+                        </div>
+                        <div className="flex gap-2">
+                            <input id="showLevel5LinksCheckbox" type="checkbox" checked={showLevel5Links} onChange={e => {
+                                setShowLevel5Links(e.target.checked);
+                            }}/>
+                            <label className="label" htmlFor="showLevel5LinksCheckbox">Show Primary Links</label>
                         </div>
                         <div className="flex gap-2">
                             <input id="showLevel4LinksCheckbox" type="checkbox" checked={showLevel4Links} onChange={e => {
@@ -256,7 +263,7 @@ export default function Home() {
     );
 }
 
-function generateGraphDataFromPresets(presets: Preset[], addPresetNodes: boolean, addLevel4Links: boolean, addLevel3Links: boolean, addLevel2Links: boolean, addLevel1Links: boolean, filterText: string, matchWholeWord: boolean) {
+function generateGraphDataFromPresets(presets: Preset[], addPresetNodes: boolean, addLevel5Links: boolean, addLevel4Links: boolean, addLevel3Links: boolean, addLevel2Links: boolean, addLevel1Links: boolean, filterText: string, matchWholeWord: boolean) {
     const graphData = {
         nodes: [
             // {
@@ -320,12 +327,14 @@ function generateGraphDataFromPresets(presets: Preset[], addPresetNodes: boolean
                 const id = `${c}|${p}`;
                 
                 // If the full word hadn't previously been added, add the link to the preset
-                if (addPresetNodes && fullWordAdded) {
+                if (addPresetNodes && fullWordAdded && addLevel5Links) {
                     addLink(graphData, fullId, preset.shortName, LinkType.Level5);
                 }
                 
                 // Add the link from the full word to the current character
-                addLink(graphData, fullId, id, LinkType.Level5);
+                if (addLevel5Links) {
+                    addLink(graphData, fullId, id, LinkType.Level5);
+                }
                 
                 // Add weak links between pinyins that differ only by tone (e.g. shi4 > shi2)
                 const simpleP = p.replace(/\d/, '');

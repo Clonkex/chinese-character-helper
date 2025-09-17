@@ -18,7 +18,8 @@ interface GraphNode {
 }
 
 enum LinkType {
-    Level4, // Strongest
+    Level5, // Strongest
+    Level4,
     Level3,
     Level2,
     Level1, // Weakest
@@ -40,11 +41,13 @@ export default function Home() {
     const [showLevel3Links, setShowLevel3Links] = useState(true);
     const [showLevel2Links, setShowLevel2Links] = useState(true);
     const [showLevel1Links, setShowLevel1Links] = useState(true);
+    const [filterText, setFilterText] = useState('');
+    const [matchWholeWord, setMatchWholeWord] = useState(true);
     
     useEffect(() => {
-        setGraphData(generateGraphDataFromPresets(presets.filter(p => enabledPresetIds.includes(p.id)), enablePresetNodes, showLevel4Links, showLevel3Links, showLevel2Links, showLevel1Links));
+        setGraphData(generateGraphDataFromPresets(presets.filter(p => enabledPresetIds.includes(p.id)), enablePresetNodes, showLevel4Links, showLevel3Links, showLevel2Links, showLevel1Links, filterText, matchWholeWord));
         graphRef.current?.zoomToFit(500);
-    }, [enabledPresetIds, enablePresetNodes, showLevel4Links, showLevel3Links, showLevel2Links, showLevel1Links]);
+    }, [enabledPresetIds, enablePresetNodes, showLevel4Links, showLevel3Links, showLevel2Links, showLevel1Links, filterText, matchWholeWord]);
     
     useEffect(() => {
         setTimeout(() => {
@@ -99,25 +102,44 @@ export default function Home() {
                             <input id="showLevel4LinksCheckbox" type="checkbox" checked={showLevel4Links} onChange={e => {
                                 setShowLevel4Links(e.target.checked);
                             }}/>
-                            <label className="label" htmlFor="showLevel4LinksCheckbox">Show Level 4 Links</label>
+                            <label className="label" htmlFor="showLevel4LinksCheckbox">Show Strongest Links</label>
                         </div>
                         <div className="flex gap-2">
                             <input id="showLevel3LinksCheckbox" type="checkbox" checked={showLevel3Links} onChange={e => {
                                 setShowLevel3Links(e.target.checked);
                             }}/>
-                            <label className="label" htmlFor="showLevel3LinksCheckbox">Show Level 3 Links</label>
+                            <label className="label" htmlFor="showLevel3LinksCheckbox">Show Stronger Links</label>
                         </div>
                         <div className="flex gap-2">
                             <input id="showLevel2LinksCheckbox" type="checkbox" checked={showLevel2Links} onChange={e => {
                                 setShowLevel2Links(e.target.checked);
                             }}/>
-                            <label className="label" htmlFor="showLevel2LinksCheckbox">Show Level 2 Links</label>
+                            <label className="label" htmlFor="showLevel2LinksCheckbox">Show Weaker Links</label>
                         </div>
                         <div className="flex gap-2">
                             <input id="showLevel1LinksCheckbox" type="checkbox" checked={showLevel1Links} onChange={e => {
                                 setShowLevel1Links(e.target.checked);
                             }}/>
-                            <label className="label" htmlFor="showLevel1LinksCheckbox">Show Level 1 Links</label>
+                            <label className="label" htmlFor="showLevel1LinksCheckbox">Show Weakest Links</label>
+                        </div>
+                    </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                    <span>Filter</span>
+                    <div className="flex flex-col">
+                        <div className="flex gap-2 items-center">
+                            <input type="input" className="input" value={filterText} onChange={e => {
+                                setFilterText(e.target.value);
+                            }}/>
+                            <button type="button" className="btn btn-sm" onClick={() => {
+                                setFilterText('');
+                            }}>Clear</button>
+                        </div>
+                        <div className="flex gap-2">
+                            <input id="matchWholeWordCheckbox" type="checkbox" checked={matchWholeWord} onChange={e => {
+                                setMatchWholeWord(e.target.checked);
+                            }}/>
+                            <label className="label" htmlFor="matchWholeWordCheckbox">Match Whole Word</label>
                         </div>
                     </div>
                 </div>
@@ -189,17 +211,20 @@ export default function Home() {
                     linkWidth={(d: GraphLink) => {
                         let width: number;
                         switch (d.type) {
-                            case LinkType.Level4:
+                            case LinkType.Level5:
                                 width = 8;
                                 break;
-                            case LinkType.Level3:
+                            case LinkType.Level4:
                                 width = 6;
                                 break;
-                            case LinkType.Level2:
+                            case LinkType.Level3:
                                 width = 4;
                                 break;
-                            case LinkType.Level1:
+                            case LinkType.Level2:
                                 width = 2;
+                                break;
+                            case LinkType.Level1:
+                                width = 1;
                                 break;
                         }
                         return width;
@@ -207,8 +232,11 @@ export default function Home() {
                     linkColor={(d: GraphLink) => {
                         let colour: string;
                         switch (d.type) {
-                            case LinkType.Level4:
+                            case LinkType.Level5:
                                 colour = '#65cdbc';
+                                break;
+                            case LinkType.Level4:
+                                colour = '#b09bc9';
                                 break;
                             case LinkType.Level3:
                                 colour = '#c79bc9';
@@ -228,7 +256,7 @@ export default function Home() {
     );
 }
 
-function generateGraphDataFromPresets(presets: Preset[], addPresetNodes: boolean, addLevel4Links: boolean, addLevel3Links: boolean, addLevel2Links: boolean, addLevel1Links: boolean) {
+function generateGraphDataFromPresets(presets: Preset[], addPresetNodes: boolean, addLevel4Links: boolean, addLevel3Links: boolean, addLevel2Links: boolean, addLevel1Links: boolean, filterText: string, matchWholeWord: boolean) {
     const graphData = {
         nodes: [
             // {
@@ -255,6 +283,23 @@ function generateGraphDataFromPresets(presets: Preset[], addPresetNodes: boolean
             
             const fullId = `${fullC}|${fullP}`;
             
+            // Skip any non-matching words
+            if (filterText !== '') {
+                if (matchWholeWord) {
+                    const parts = fullId.split('|').flatMap(p => p.split(/\d/));
+                    console.log(parts);
+                    if (!parts.includes(filterText)) {
+                        console.log(`Skipping word "${fullId}" in preset "${preset.id}" because it does not match the filter text "${filterText}"`);
+                        continue;
+                    }
+                } else {
+                    if (!fullId.includes(filterText)) {
+                        console.log(`Skipping word "${fullId}" in preset "${preset.id}" because it does not match the filter text "${filterText}"`);
+                        continue;
+                    }
+                }
+            }
+            
             // Skip any broken preset words
             if (word.c.length !== word.p.length) {
                 console.log(`Skipping invalid word "${fullId}" in preset "${preset.id}"`);
@@ -276,11 +321,11 @@ function generateGraphDataFromPresets(presets: Preset[], addPresetNodes: boolean
                 
                 // If the full word hadn't previously been added, add the link to the preset
                 if (addPresetNodes && fullWordAdded) {
-                    addLink(graphData, fullId, preset.shortName, LinkType.Level4);
+                    addLink(graphData, fullId, preset.shortName, LinkType.Level5);
                 }
                 
                 // Add the link from the full word to the current character
-                addLink(graphData, fullId, id, LinkType.Level4);
+                addLink(graphData, fullId, id, LinkType.Level5);
                 
                 // Add weak links between pinyins that differ only by tone (e.g. shi4 > shi2)
                 const simpleP = p.replace(/\d/, '');

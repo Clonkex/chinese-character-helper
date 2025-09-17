@@ -74,26 +74,22 @@ export default function Home() {
         <div className="flex">
             <div className="flex flex-col gap-10 m-5">
                 <div className="flex flex-col gap-2">
-                    <span>Presets</span>
+                    <span>Filter</span>
                     <div className="flex flex-col">
-                        {presets.map(preset =>
-                            <div key={preset.id} className="flex gap-2">
-                                <input id={`preset-${preset.id}`} type="checkbox" checked={enabledPresetIds.includes(preset.id)} onChange={e => {
-                                    setEnabledPresetIds(produce(enabledPresetIds, draft => {
-                                        if (e.target.checked) {
-                                            if (!draft.includes(preset.id)) {
-                                                draft.push(preset.id);
-                                            }
-                                        } else {
-                                            if (draft.includes(preset.id)) {
-                                                draft.splice(draft.indexOf(preset.id), 1);
-                                            }
-                                        }
-                                    }));
-                                }}/>
-                                <label className="label" htmlFor={`preset-${preset.id}`}>{preset.name}</label>
-                            </div>
-                        )}
+                        <div className="flex gap-2 items-center">
+                            <input type="input" className="input" value={filterText} onChange={e => {
+                                setFilterText(e.target.value);
+                            }}/>
+                            <button type="button" className="btn btn-sm" onClick={() => {
+                                setFilterText('');
+                            }}>Clear</button>
+                        </div>
+                        <div className="flex gap-2">
+                            <input id="matchWholeWordCheckbox" type="checkbox" checked={matchWholeWord} onChange={e => {
+                                setMatchWholeWord(e.target.checked);
+                            }}/>
+                            <label className="label" htmlFor="matchWholeWordCheckbox">Match Whole Word</label>
+                        </div>
                     </div>
                 </div>
                 <div className="flex flex-col gap-2">
@@ -144,22 +140,26 @@ export default function Home() {
                     </div>
                 </div>
                 <div className="flex flex-col gap-2">
-                    <span>Filter</span>
+                    <span>Presets</span>
                     <div className="flex flex-col">
-                        <div className="flex gap-2 items-center">
-                            <input type="input" className="input" value={filterText} onChange={e => {
-                                setFilterText(e.target.value);
-                            }}/>
-                            <button type="button" className="btn btn-sm" onClick={() => {
-                                setFilterText('');
-                            }}>Clear</button>
-                        </div>
-                        <div className="flex gap-2">
-                            <input id="matchWholeWordCheckbox" type="checkbox" checked={matchWholeWord} onChange={e => {
-                                setMatchWholeWord(e.target.checked);
-                            }}/>
-                            <label className="label" htmlFor="matchWholeWordCheckbox">Match Whole Word</label>
-                        </div>
+                        {presets.map(preset =>
+                            <div key={preset.id} className="flex gap-2">
+                                <input id={`preset-${preset.id}`} type="checkbox" checked={enabledPresetIds.includes(preset.id)} onChange={e => {
+                                    setEnabledPresetIds(produce(enabledPresetIds, draft => {
+                                        if (e.target.checked) {
+                                            if (!draft.includes(preset.id)) {
+                                                draft.push(preset.id);
+                                            }
+                                        } else {
+                                            if (draft.includes(preset.id)) {
+                                                draft.splice(draft.indexOf(preset.id), 1);
+                                            }
+                                        }
+                                    }));
+                                }}/>
+                                <label className="label" htmlFor={`preset-${preset.id}`}>{preset.name}</label>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

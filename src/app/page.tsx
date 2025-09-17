@@ -71,17 +71,19 @@ export default function Home() {
                 </div>
                 <div className="flex flex-col gap-2">
                     <span>Settings</span>
-                    <div className="flex gap-2">
-                        <input id="enablePresetNodesCheckbox" type="checkbox" checked={enablePresetNodes} onChange={e => {
-                            setEnablePresetNodes(e.target.checked);
-                        }}/>
-                        <label className="label" htmlFor="enablePresetNodesCheckbox">Add Preset Nodes</label>
-                    </div>
-                    <div className="flex gap-2">
-                        <input id="useGlobalScaleCheckbox" type="checkbox" checked={useGlobalScale} onChange={e => {
-                            setUseGlobalScale(e.target.checked);
-                        }}/>
-                        <label className="label" htmlFor="useGlobalScaleCheckbox">Scale With Zoom</label>
+                    <div className="flex flex-col">
+                        <div className="flex gap-2">
+                            <input id="enablePresetNodesCheckbox" type="checkbox" checked={enablePresetNodes} onChange={e => {
+                                setEnablePresetNodes(e.target.checked);
+                            }}/>
+                            <label className="label" htmlFor="enablePresetNodesCheckbox">Add Preset Nodes</label>
+                        </div>
+                        <div className="flex gap-2">
+                            <input id="useGlobalScaleCheckbox" type="checkbox" checked={useGlobalScale} onChange={e => {
+                                setUseGlobalScale(e.target.checked);
+                            }}/>
+                            <label className="label" htmlFor="useGlobalScaleCheckbox">Scale With Zoom</label>
+                        </div>
                     </div>
                 </div>
             </div>

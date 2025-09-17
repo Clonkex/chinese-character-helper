@@ -17,8 +17,15 @@ interface GraphNode {
     type: NodeType;
 }
 
+enum LinkType {
+    Level4, // strongest
+    Level3,
+    Level2,
+    Level1, // weakest
+}
+
 interface GraphLink {
-    weakLink: boolean;
+    type: LinkType;
 }
 
 export default function Home() {
@@ -29,11 +36,15 @@ export default function Home() {
     });
     const [enablePresetNodes, setEnablePresetNodes] = useState(true);
     const [useGlobalScale, setUseGlobalScale] = useState(false);
+    const [showLevel4Links, setShowLevel4Links] = useState(true);
+    const [showLevel3Links, setShowLevel3Links] = useState(true);
+    const [showLevel2Links, setShowLevel2Links] = useState(true);
+    const [showLevel1Links, setShowLevel1Links] = useState(true);
     
     useEffect(() => {
-        setGraphData(generateGraphDataFromPresets(presets.filter(p => enabledPresetIds.includes(p.id)), enablePresetNodes));
+        setGraphData(generateGraphDataFromPresets(presets.filter(p => enabledPresetIds.includes(p.id)), enablePresetNodes, showLevel4Links, showLevel3Links, showLevel2Links, showLevel1Links));
         graphRef.current?.zoomToFit(500);
-    }, [enabledPresetIds, enablePresetNodes]);
+    }, [enabledPresetIds, enablePresetNodes, showLevel4Links, showLevel3Links, showLevel2Links, showLevel1Links]);
     
     useEffect(() => {
         setTimeout(() => {
@@ -84,6 +95,30 @@ export default function Home() {
                             }}/>
                             <label className="label" htmlFor="useGlobalScaleCheckbox">Scale With Zoom</label>
                         </div>
+                        <div className="flex gap-2">
+                            <input id="showLevel4LinksCheckbox" type="checkbox" checked={showLevel4Links} onChange={e => {
+                                setShowLevel4Links(e.target.checked);
+                            }}/>
+                            <label className="label" htmlFor="showLevel4LinksCheckbox">Show Level 4 Links</label>
+                        </div>
+                        <div className="flex gap-2">
+                            <input id="showLevel3LinksCheckbox" type="checkbox" checked={showLevel3Links} onChange={e => {
+                                setShowLevel3Links(e.target.checked);
+                            }}/>
+                            <label className="label" htmlFor="showLevel3LinksCheckbox">Show Level 3 Links</label>
+                        </div>
+                        <div className="flex gap-2">
+                            <input id="showLevel2LinksCheckbox" type="checkbox" checked={showLevel2Links} onChange={e => {
+                                setShowLevel2Links(e.target.checked);
+                            }}/>
+                            <label className="label" htmlFor="showLevel2LinksCheckbox">Show Level 2 Links</label>
+                        </div>
+                        <div className="flex gap-2">
+                            <input id="showLevel1LinksCheckbox" type="checkbox" checked={showLevel1Links} onChange={e => {
+                                setShowLevel1Links(e.target.checked);
+                            }}/>
+                            <label className="label" htmlFor="showLevel1LinksCheckbox">Show Level 1 Links</label>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -116,8 +151,10 @@ export default function Home() {
                         
                         // Prepare font and measure text
                         ctx.font = `${fontSize}px Sans-Serif`;
-                        const label = String(node.id);
-                        const diameter = ctx.measureText(label).width + 2;
+                        const idParts = String(node.id).split('|');
+                        const label = idParts[0];
+                        const metrics = ctx.measureText(label);
+                        const diameter = metrics.width + 2;
                         
                         // Render circle
                         ctx.fillStyle = colour;
@@ -130,6 +167,10 @@ export default function Home() {
                         ctx.textBaseline = 'middle';
                         ctx.fillStyle = '#0e0e0e';
                         ctx.fillText(label, node.x, node.y);
+                        if (idParts.length > 1) {
+                            ctx.font = `${fontSize / 2}px Sans-Serif`;
+                            ctx.fillText(idParts[1], node.x, node.y + fontSize * 0.7);
+                        }
 
                         node.diameter = diameter; // to reuse in nodePointerAreaPaint
                     }}
@@ -145,15 +186,49 @@ export default function Home() {
                             ctx.fill();
                         }
                     }}
-                    linkWidth={(d: GraphLink) => d.weakLink ? 4 : 8}
-                    linkColor={(d: GraphLink) => d.weakLink ? '#c79bc9' : '#65cdbc'}
+                    linkWidth={(d: GraphLink) => {
+                        let width: number;
+                        switch (d.type) {
+                            case LinkType.Level4:
+                                width = 8;
+                                break;
+                            case LinkType.Level3:
+                                width = 6;
+                                break;
+                            case LinkType.Level2:
+                                width = 4;
+                                break;
+                            case LinkType.Level1:
+                                width = 2;
+                                break;
+                        }
+                        return width;
+                    }}
+                    linkColor={(d: GraphLink) => {
+                        let colour: string;
+                        switch (d.type) {
+                            case LinkType.Level4:
+                                colour = '#65cdbc';
+                                break;
+                            case LinkType.Level3:
+                                colour = '#c79bc9';
+                                break;
+                            case LinkType.Level2:
+                                colour = '#c9c19b';
+                                break;
+                            case LinkType.Level1:
+                                colour = '#c99b9f';
+                                break;
+                        }
+                        return colour;
+                    }}
                 />
             </div>
         </div>
     );
 }
 
-function generateGraphDataFromPresets(presets: Preset[], addPresetNodes: boolean) {
+function generateGraphDataFromPresets(presets: Preset[], addPresetNodes: boolean, addLevel4Links: boolean, addLevel3Links: boolean, addLevel2Links: boolean, addLevel1Links: boolean) {
     const graphData = {
         nodes: [
             // {
@@ -178,46 +253,73 @@ function generateGraphDataFromPresets(presets: Preset[], addPresetNodes: boolean
             const fullC = word.c.join('');
             const fullP = word.p.join('');
             
+            const fullId = `${fullC}|${fullP}`;
+            
             // Skip any broken preset words
             if (word.c.length !== word.p.length) {
-                console.log(`Skipping invalid word "${fullC}" (${fullP}) in preset "${preset.id}"`);
+                console.log(`Skipping invalid word "${fullId}" in preset "${preset.id}"`);
                 continue;
             }
             
             // Add the full word with all characters
-            const fullWordAdded = addNode(graphData, fullC, NodeType.Character);
+            const fullWordAdded = addNode(graphData, fullId, NodeType.Character);
             
             // Add each character separately unless it's already added
-            word.c.forEach(c => addNode(graphData, c, NodeType.Character));
-            
-            // Add each pinyin separately unless it's already added
-            word.p.forEach(p => addNode(graphData, p, NodeType.Pinyin));
+            word.c.forEach((c, index) => addNode(graphData, `${c}|${word.p[index]}`, NodeType.Character));
             
             // Add links
             for (let i = 0; i < word.c.length; i++) {
                 const c = word.c[i];
                 const p = word.p[i];
                 
+                const id = `${c}|${p}`;
+                
                 // If the full word hadn't previously been added, add the link to the preset
                 if (addPresetNodes && fullWordAdded) {
-                    addLink(graphData, fullC, preset.shortName, false);
+                    addLink(graphData, fullId, preset.shortName, LinkType.Level4);
                 }
                 
                 // Add the link from the full word to the current character
-                addLink(graphData, fullC, c, false);
-                
-                // Add the link from the current character to the current pinyin
-                addLink(graphData, c, p, false);
+                addLink(graphData, fullId, id, LinkType.Level4);
                 
                 // Add weak links between pinyins that differ only by tone (e.g. shi4 > shi2)
                 const simpleP = p.replace(/\d/, '');
                 for (const other of graphData.nodes) {
-                    if (other.id === p || other.type !== NodeType.Pinyin) {
+                    if (other.id === id || other.type !== NodeType.Character || other.id === undefined) {
                         continue;
                     }
-                    const otherSimpleP = String(other.id).replace(/\d/, '');
-                    if (simpleP === otherSimpleP) {
-                        addLink(graphData, p, other.id!, true);
+                    const otherIdParts = String(other.id).split('|');
+                    if (otherIdParts.length < 2) {
+                        continue;
+                    }
+                    const otherC = otherIdParts[0];
+                    const otherP = otherIdParts[1];
+                    const otherSimpleP = otherP.replace(/\d/, '');
+                    
+                    if (otherC === c) {
+                        if (otherSimpleP === simpleP) {
+                            // characters match, pinyins weak match == character match + pinyin weak match link (level 4)
+                            if (addLevel4Links) {
+                                addLink(graphData, id, other.id, LinkType.Level4);
+                            }
+                        } else {
+                            // characters match, pinyins no match == character match link (level 3)
+                            if (addLevel3Links) {
+                                addLink(graphData, id, other.id, LinkType.Level3);
+                            }
+                        }
+                    } else {
+                        if (otherP === p) {
+                            // characters no match, pinyins exact match == pinyin match link (level 2)
+                            if (addLevel2Links) {
+                                addLink(graphData, id, other.id, LinkType.Level2);
+                            }
+                        } else if (otherSimpleP === simpleP) {
+                            // characters no match, pinyins inexact match (tones differ) == pinyin weak match link (level 1)
+                            if (addLevel1Links) {
+                                addLink(graphData, id, other.id, LinkType.Level1);
+                            }
+                        }
                     }
                 }
             }
@@ -239,7 +341,7 @@ function generateGraphDataFromPresets(presets: Preset[], addPresetNodes: boolean
         return true;
     }
 
-    function addLink(graphData: { nodes: NodeObject<GraphNode>[], links: LinkObject<GraphNode, GraphLink>[] }, source: string | number, target: string | number, weakLink: boolean): boolean {
+    function addLink(graphData: { nodes: NodeObject<GraphNode>[], links: LinkObject<GraphNode, GraphLink>[] }, source: string | number, target: string | number, type: LinkType): boolean {
         if (source === target) {
             console.log(`Skipping link because source "${source}" === target "${target}"`);
             return false;
@@ -260,7 +362,7 @@ function generateGraphDataFromPresets(presets: Preset[], addPresetNodes: boolean
         graphData.links.push({
             source,
             target,
-            weakLink,
+            type,
         });
         return true;
     }

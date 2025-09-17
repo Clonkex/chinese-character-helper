@@ -151,7 +151,7 @@ export default function Home() {
                     </div>
                 </div>
             </div>
-            <div className=" bg-slate-400">
+            <div className="bg-slate-400">
                 <ForceGraph2D
                     ref={graphRef}
                     graphData={graphData}
@@ -294,7 +294,6 @@ function generateGraphDataFromPresets(presets: Preset[], addPresetNodes: boolean
             if (filterText !== '') {
                 if (matchWholeWord) {
                     const parts = fullId.split('|').flatMap(p => p.split(/\d/));
-                    console.log(parts);
                     if (!parts.includes(filterText)) {
                         console.log(`Skipping word "${fullId}" in preset "${preset.id}" because it does not match the filter text "${filterText}"`);
                         continue;
@@ -400,16 +399,12 @@ function generateGraphDataFromPresets(presets: Preset[], addPresetNodes: boolean
             console.log(`Skipping link because source "${source}" === target "${target}"`);
             return false;
         }
-        const test1 = graphData.links.find(l => l.source === source && l.target === target);
-        if (test1 !== undefined) {
+        if (graphData.links.find(l => l.source === source && l.target === target) !== undefined) {
             console.log(`Skipping link because an existing link with the same source "${source}" and target "${target}" exists`);
-            console.log(test1);
             return false;
         }
-        const test2 = graphData.links.find(l => l.source === target && l.target === source);
-        if (test2 !== undefined) {
+        if (graphData.links.find(l => l.source === target && l.target === source) !== undefined) {
             console.log(`Skipping link because an existing link with a source matching target "${target}" and target matching source "${source}" exists`);
-            console.log(test2);
             return false;
         }
         console.log(`Adding link with source "${source}" and target "${target}"`);

@@ -1,7 +1,7 @@
 'use client'
 
 import { produce, setAutoFreeze } from 'immer';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import ForceGraph2D, { ForceGraphMethods, LinkObject, NodeObject } from 'react-force-graph-2d';
 import { Preset, presets } from '@/lib/presets';
 
@@ -30,6 +30,7 @@ interface GraphLink {
 }
 
 export default function Home() {
+    const [graphSize, setGraphSize] = useState({w: 500, h: 500});
     const [enabledPresetIds, setEnabledPresetIds] = useState(presets.map(p => p.id));
     const [graphData, setGraphData] = useState({
         nodes: [] as NodeObject<GraphNode>[],
@@ -45,6 +46,9 @@ export default function Home() {
     const [filterText, setFilterText] = useState('');
     const [matchWholeWord, setMatchWholeWord] = useState(true);
     
+    const graphRef = useRef<ForceGraphMethods<GraphNode, GraphLink>>(undefined);
+    const graphContainerRef = useRef<HTMLDivElement>(null);
+    
     useEffect(() => {
         setGraphData(generateGraphDataFromPresets(presets.filter(p => enabledPresetIds.includes(p.id)), enablePresetNodes, showLevel5Links, showLevel4Links, showLevel3Links, showLevel2Links, showLevel1Links, filterText, matchWholeWord));
         graphRef.current?.zoomToFit(500);
@@ -56,7 +60,15 @@ export default function Home() {
         }, 500);
     }, []);
     
-    const graphRef = useRef<ForceGraphMethods<GraphNode, GraphLink>>(undefined);
+    useLayoutEffect(() => {
+        if (graphContainerRef.current === null) {
+            return;
+        }
+        setGraphSize({
+            w: graphContainerRef.current.clientWidth,
+            h: graphContainerRef.current.clientHeight,
+        });
+    }, []);
     
     return (
         <div className="flex">
@@ -151,10 +163,12 @@ export default function Home() {
                     </div>
                 </div>
             </div>
-            <div className="bg-slate-400">
+            <div ref={graphContainerRef} className="flex flex-grow h-screen bg-slate-400">
                 <ForceGraph2D
                     ref={graphRef}
                     graphData={graphData}
+                    width={graphSize.w}
+                    height={graphSize.h}
                     nodeCanvasObject={(node, ctx, globalScale) => {
                         if (node.x === undefined || node.y === undefined) {
                             return;
@@ -386,7 +400,7 @@ function generateGraphDataFromPresets(presets: Preset[], addPresetNodes: boolean
             console.log(`Skipping node because node with id "${id}" already exists`);
             return false;
         }
-        console.log(`Adding node "${id}"`);
+        // console.log(`Adding node "${id}"`);
         graphData.nodes.push({
             id,
             type,
@@ -407,7 +421,7 @@ function generateGraphDataFromPresets(presets: Preset[], addPresetNodes: boolean
             console.log(`Skipping link because an existing link with a source matching target "${target}" and target matching source "${source}" exists`);
             return false;
         }
-        console.log(`Adding link with source "${source}" and target "${target}"`);
+        // console.log(`Adding link with source "${source}" and target "${target}"`);
         graphData.links.push({
             source,
             target,

@@ -307,10 +307,16 @@ function generateGraphDataFromPresets(presets: Preset[], addPresetNodes: boolean
             // Skip any non-matching words
             if (filterText !== '') {
                 if (matchWholeWord) {
-                    const parts = fullId.split('|').flatMap(p => p.split(/\d/));
-                    if (!parts.includes(filterText)) {
-                        console.log(`Skipping word "${fullId}" in preset "${preset.id}" because it does not match the filter text "${filterText}"`);
-                        continue;
+                    if (/\d/.test(filterText)) {
+                        if (!word.p.includes(filterText)) {
+                            console.log(`Skipping word "${fullId}" in preset "${preset.id}" because it does not match the filter text "${filterText}"`);
+                            continue;
+                        }
+                    } else {
+                        if (!word.p.map(p => p.replace(/\d/, '')).includes(filterText)) {
+                            console.log(`Skipping word "${fullId}" in preset "${preset.id}" because it does not match the filter text "${filterText}"`);
+                            continue;
+                        }
                     }
                 } else {
                     if (!fullId.includes(filterText)) {

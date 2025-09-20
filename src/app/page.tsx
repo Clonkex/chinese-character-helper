@@ -294,7 +294,7 @@ function generateGraphDataFromPresets(presets: Preset[], addPresetNodes: boolean
         if (addPresetNodes) {
             addNode(graphData, preset.shortName, NodeType.Custom);
         }
-                
+        
         // Add NPCR link
         // addLink(graphData, preset.id, 'root', false);
         
@@ -306,23 +306,25 @@ function generateGraphDataFromPresets(presets: Preset[], addPresetNodes: boolean
             
             // Skip any non-matching words
             if (filterText !== '') {
+                let skip = false;
                 if (matchWholeWord) {
                     if (/\d/.test(filterText)) {
                         if (!word.p.includes(filterText)) {
-                            console.log(`Skipping word "${fullId}" in preset "${preset.id}" because it does not match the filter text "${filterText}"`);
-                            continue;
+                            skip = true;
                         }
                     } else {
                         if (!word.p.map(p => p.replace(/\d/, '')).includes(filterText)) {
-                            console.log(`Skipping word "${fullId}" in preset "${preset.id}" because it does not match the filter text "${filterText}"`);
-                            continue;
+                            skip = true;
                         }
                     }
                 } else {
                     if (!fullId.includes(filterText)) {
-                        console.log(`Skipping word "${fullId}" in preset "${preset.id}" because it does not match the filter text "${filterText}"`);
-                        continue;
+                        skip = true;
                     }
+                }
+                if (skip) {
+                    console.log(`Skipping word "${fullId}" in preset "${preset.id}" because it does not match the filter text "${filterText}"`);
+                    continue;
                 }
             }
             

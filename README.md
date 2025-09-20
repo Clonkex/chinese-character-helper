@@ -5,6 +5,7 @@ Currently includes the characters from lessons 1 - 17 of the New Practical Chine
 
 ## TODO
 - allow searching by character
+- make the graph canvas responsive to window size changes
 - show dictionary entries when hovering characters
 - render pinyin with tone marks instead of numbers
 - better sizing/spacing so nodes don't overlap so much

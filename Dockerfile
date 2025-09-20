@@ -55,9 +55,8 @@ COPY package.json .
 COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app .
 
-
 # Expose the port that the application listens on.
 EXPOSE 8000
 
-# Run the application. (without npm so SIGTERM is passed)
-CMD ["node", "./dist/index.js"]
+# Run the application.
+CMD ["./node_modules/.bin/next", "start", "-p", "8000"]

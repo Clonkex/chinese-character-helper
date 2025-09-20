@@ -73,7 +73,7 @@ export const presets: Preset[] = [
             {c: ['人'], p: ['ren2']},
             {c: ['那'], p: ['na4']},
             {c: ['谁'], p: ['shei2']},
-            {c: ['老', '师'], p: ['lao3', 'shi2']},
+            {c: ['老', '师'], p: ['lao3', 'shi1']},
             {c: ['都'], p: ['dou1']},
             {c: ['中', '国'], p: ['zhong1', 'guo2']},
             

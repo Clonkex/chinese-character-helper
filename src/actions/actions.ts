@@ -14,6 +14,6 @@ export async function loadPresets(): Promise<Preset[]> {
 
 export async function savePresets(presets: Preset[]): Promise<boolean> {
     const json = JSON.stringify(presets);
-    fs.writeFileSync('data/presets.json', json, 'utf8');
+    // fs.writeFileSync('data/presets.json', json, 'utf8');
     return true;
 }

@@ -13,3 +13,4 @@ Currently includes the characters from lessons 1 - 17 of the New Practical Chine
 - somehow link characters by similar components
 - rename "Presets" to something more meaningful
 - add header bar
+- fix preset nodes being left over when filtering

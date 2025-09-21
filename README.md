@@ -8,6 +8,8 @@ Currently includes the characters from lessons 1 - 17 of the New Practical Chine
 - make the graph canvas responsive to window size changes
 - show dictionary entries when hovering characters
 - render pinyin with tone marks instead of numbers
+- allow filtering by pinyin with tone marks instead of numbers
 - better sizing/spacing so nodes don't overlap so much
 - somehow link characters by similar components
-- rename presets to something more meaningful
+- rename "Presets" to something more meaningful
+- add header bar

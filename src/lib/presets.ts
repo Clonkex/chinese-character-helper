@@ -803,7 +803,7 @@ export const presets: Preset[] = [
             {c: ['室'], p: ['shi4']},
             {c: ['上'], p: ['shang4']},
             {c: ['先'], p: ['xian1']},
-            {c: ['借', '书', '证'], p: ['jie4', 'shu4', 'zheng4']},
+            {c: ['借', '书', '证'], p: ['jie4', 'shu1', 'zheng4']},
             {c: ['借'], p: ['jie4']},
             {c: ['证'], p: ['zheng4']},
             {c: ['一', '会', '儿'], p: ['yi2', 'hui4', 'er5']},

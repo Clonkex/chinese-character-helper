@@ -1,15 +1,15 @@
-FROM node:20.19.5-alpine as base
+FROM node:20.19.5-alpine AS base
 
 # Set working directory for all build stages.
 WORKDIR /usr/src/app
 
-FROM base as build-base
+FROM base AS build-base
 
 RUN apk update && apk add build-base
 
 ################################################################################
 # Create a stage for installing production dependecies.
-FROM build-base as deps
+FROM build-base AS deps
 
 # Download dependencies as a separate step to take advantage of Docker's caching.
 # Leverage a cache mount to /root/.npm to speed up subsequent builds.
@@ -22,7 +22,7 @@ RUN --mount=type=bind,source=package.json,target=package.json \
 
 ################################################################################
 # Create a stage for building the application.
-FROM deps as build
+FROM deps AS build
 
 # Download additional development dependencies before building, as some projects require
 # "devDependencies" to be installed to build. If you don't need this, remove this step.
@@ -39,7 +39,7 @@ RUN npm run build
 ################################################################################
 # Create a new stage to run the application with minimal runtime dependencies
 # where the necessary files are copied from the build stage.
-FROM base as final
+FROM base AS final
 
 # Use production node environment by default.
 ENV NODE_ENV production
